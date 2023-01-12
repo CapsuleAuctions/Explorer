@@ -12,6 +12,8 @@ class MultiMatch implements SyntaxInterface
 
     private $fuzziness;
 
+    private ?float $boost = null;
+
     public function __construct(string $value, ?array $fields = null, $fuzziness = 'auto')
     {
         $this->value = $value;
@@ -31,6 +33,15 @@ class MultiMatch implements SyntaxInterface
             $query['fuzziness'] = $this->fuzziness;
         }
 
+        if (!is_null($this->boost)) {
+            $query['boost'] = $this->boost;
+        }
+
         return [ 'multi_match' => $query ];
+    }
+
+    public function setBoost(float $value): void
+    {
+        $this->boost = $value;
     }
 }
