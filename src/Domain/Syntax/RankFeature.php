@@ -12,31 +12,50 @@ class RankFeature implements SyntaxInterface
 
     private ?float $boost;
 
-    private ?array $function;
+    private array $functions = [
+        'saturation' => [],
+        // 'saturation' => ["pivot": 8],
+        'log' => [
+            "scaling_factor" => 4
+        ],
+        'sigmoid' => [],
+        // 'sigmoid' => [
+        //     "pivot" => 7,
+        //     "exponent" => 0.6
+        // ],
+        'linear' => [],
+    ];
+    private ?array $function = null;
 
     public function __construct(
         string $field,
         ?float $boost = 1.0,
-        ?array $function = null
+        ?string $function = null,
+        ?array $parameters = null
     ){
         $this->field = $field;
         $this->boost = $boost;
-        $this->function = $function;
+
+        if ($function && array_key_exists($function, $this->functions)) {
+            $functionValue = $parameters ?? $this->functions[$function];
+            $this->function = [$function => $functionValue];
+        }
     }
 
     public function build(): array
     {
         $rank_object = [
-            'field' => $this->field,
-            'boost' => $this->boost,
+            'rank_feature' => [
+                'field' => $this->field,
+                'boost' => $this->boost,
+            ]
         ];
 
         if ($this->function) {
-            $rank_object[ $this->function['type'] ] = $this->function['content'];
+            $functionType = array_key_first($this->function);
+            $rank_object['rank_feature'][ $functionType ] = $this->function[ $functionType ];
         }
-        
-        return [
-            'rank_feature' => $rank_object
-        ];
+
+        return $rank_object;
     }
 }
